@@ -18,9 +18,9 @@ public class TestBotDecodeTeleopField extends LinearOpMode {
     // Shooter/feeder constants (same as your current TeleOp). Change these constants to suit your robot and alliances game startegies
     private static final double FEED_TIME_SECONDS = 0.30;
     private static final double STOP_SPEED = 0.0;
-    private static final double FULL_SPEED = 1.0;
+    private static final double FULL_SPEED = 0.8;
     private static final double LAUNCHER_TARGET_VELOCITY = 1400;//adjust this value if needed
-    private static final double LAUNCHER_MIN_VELOCITY = 1075;
+    private static final double LAUNCHER_MIN_VELOCITY = 1200;
 
     // Drive, feeders and launcher motor
     private SimplifiedOdometryRobot robot;  // owns IMU + drive motors from SimplifiedOdometryRobot
@@ -69,15 +69,26 @@ public class TestBotDecodeTeleopField extends LinearOpMode {
             // Read sensors (updates robot.heading in DEGREES)
             robot.readSensors();
             // Convert to radians for joystick rotation
-            double headingRad = Math.toRadians(robot.getHeading()); // +CCW
+            double rawHeadingDeg = robot.getHeading(); // +CCW
+
+            //This ensures the heading is always between -180 and 180 prevenmting 180 flip
+            while ( rawHeadingDeg > 180){
+                rawHeadingDeg -= 360;
+            }
+
+            while (rawHeadingDeg <= -180){
+                rawHeadingDeg += 360;
+            }
+
+            double headingRad = Math.toRadians(rawHeadingDeg); // converts back to readians
 
             // Driver inputs from gamepad1
-            double y  = -gamepad1.right_stick_y;  // forward/back make it like last year
-            double x  =  gamepad1.right_stick_x;  // strafe make it like last year
-            double rx =  gamepad1.left_stick_x; // rotate in place make it like last year
+            double y  =  gamepad1.left_stick_x;  // forward/back make it like last year
+            double x  =  gamepad1.left_stick_y;  // strafe make it like last year
+            double rx =  gamepad1.right_stick_x; // rotate in place make it like last year
 
             // Optional slow mode
-            double speedScale = gamepad1.right_trigger > 0.5 ? 0.4 : 1.0;
+            double speedScale = gamepad1.right_trigger > 0.5 ? 0.4 : 1.0; // started at right_trigger
             y  *= speedScale;
             x  *= speedScale;
             rx *= speedScale;
@@ -86,8 +97,8 @@ public class TestBotDecodeTeleopField extends LinearOpMode {
             double r = Math.hypot(x, y);
             double stickAngle = Math.atan2(y, x);
             double fieldAngle = stickAngle - headingRad;
-            double rotatedX = -r * Math.cos(fieldAngle); // strafe axis
-            double rotatedY = r * Math.sin(fieldAngle); // drive axis
+            double rotatedX = r * Math.sin(fieldAngle); // strafe axis
+            double rotatedY = r * Math.cos(fieldAngle); // drive axis
 
             // If strafing is flipped on your bot, swap the sign:
             //rotatedX = -rotatedX
@@ -96,9 +107,9 @@ public class TestBotDecodeTeleopField extends LinearOpMode {
             robot.moveRobot(rotatedY, rotatedX, rx);
 
             // Quick re-zero of yaw if nedded
-            /*if (gamepad1.back) {
+            if (gamepad1.back) {
                 robot.resetHeading();
-            }*/
+            }
 
             // --- Launcher manual velocity toggle (same behavior you had) ---
             if (gamepad1.y) {
