@@ -25,10 +25,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class TestBotDecodeAutonomous extends LinearOpMode {
 
     // Shooter/Feeder tuning (same spirit as StarterBotAuto/Teleop)
-    private static final double FEED_TIME_SECONDS = 0.35;
-    private static final double TIME_BETWEEN_SHOTS = 2.5;
+    private static final double FEED_TIME_SECONDS = 0.40;
+    private static final double TIME_BETWEEN_SHOTS = 3.0;
 
-    private static final double LAUNCHER_TARGET_VELOCITY = 1125;  // ticks/s
+    private static final double LAUNCHER_TARGET_VELOCITY = 1200;  // ticks/s -- initoal values 1125
     private static final double LAUNCHER_MIN_VELOCITY    = 1075;  // ticks/s
     private static final PIDFCoefficients LAUNCHER_PIDF  = new PIDFCoefficients(300, 0, 0, 10);
 
@@ -100,23 +100,38 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
             if (gamepad1.b) alliance = Alliance.RED;
             if (gamepad1.x) alliance = Alliance.BLUE;
 
-            telemetry.addData("Press X", "for BLUE");
-            telemetry.addData("Press B", "for RED");
+
+            boolean yNow = gamepad1.y;
+            if (gamepad1.y) {
+                robot.resetHeading();
+            }
+
+            telemetry.addData("Press square", "for BLUE");
+            telemetry.addData("Press circle", "for RED");
             telemetry.addData("Selected Alliance", alliance);
-            telemetry.addData("Heading (deg)", "%.1f", robot.getHeading());
+            telemetry.addData("Press triangle", "zero heading");
+            //telemetry.addData("Heading (deg)", "%.1f", robot.getHeading());
+            telemetry.addData ("Heading (deg)", "%.1f", robot.getHeading());
+            telemetry.addLine ("Aim robot at field starting position, press triangle tp serp");
             telemetry.update();
             sleep(20);
         }
 
         // START pressed
         if (isStopRequested()) return;
+
+        //reset heading for precise motion
+        robot.resetHeading();
+
         autoState   = AutoState.LAUNCH_SEQUENCE;
         launchState = LaunchState.IDLE;
         shotTimer.reset();
 
         // Main autonomous state machine
         while (opModeIsActive()) {
+
             switch (autoState) {
+
                 case LAUNCH_SEQUENCE:
                     // Kick off first shot sequence
                     requestLaunch(); // sets state & timers
@@ -124,6 +139,7 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
                     break;
 
                 case WAIT_FOR_LAUNCH_CYCLE:
+
                     if (serviceLaunch(false)) {
                         shotsToFire--;
                         if (shotsToFire > 0) {
@@ -140,12 +156,13 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
 
                 case DRIVE_AWAY_FROM_GOAL:
                     // Back away a little to clear the goal (negative inches = back)
-                    robot.drive(-4.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    robot.drive(-20.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
                     autoState = AutoState.TURN_TO_FIELD;
                     break;
 
                 case TURN_TO_FIELD:
                     // Face ±45° depending on alliance (RED = +45 CCW, BLUE = -45 CW)
+                    //double targetHeading = (alliance == Alliance.RED) ? 87.0 : -87.0;
                     double targetHeading = (alliance == Alliance.RED) ? 45.0 : -45.0;
                     robot.turnTo(targetHeading, /*maxPower*/0.6, TURN_HOLD_SEC);
                     autoState = AutoState.DRIVE_OFF_LINE;
@@ -153,7 +170,7 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
 
                 case DRIVE_OFF_LINE:
                     // Drive further off the line to park/clear: adjust to your field plan
-                    robot.drive(-26.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    robot.drive(-80.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
                     autoState = AutoState.COMPLETE;
                     break;
 
