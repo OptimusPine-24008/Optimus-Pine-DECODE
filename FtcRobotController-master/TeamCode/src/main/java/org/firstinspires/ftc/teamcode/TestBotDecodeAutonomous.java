@@ -1,6 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -28,8 +42,8 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
     private static final double FEED_TIME_SECONDS = 0.40;
     private static final double TIME_BETWEEN_SHOTS = 3.0;
 
-    private static final double LAUNCHER_TARGET_VELOCITY = 1200;  // ticks/s -- initoal values 1125
-    private static final double LAUNCHER_MIN_VELOCITY    = 1075;  // ticks/s
+    private static final double LAUNCHER_TARGET_VELOCITY = 1400;  // ticks/s -- initoal values 1125
+    private static final double LAUNCHER_MIN_VELOCITY    = 1180;  // ticks/s
     private static final PIDFCoefficients LAUNCHER_PIDF  = new PIDFCoefficients(300, 0, 0, 10);
 
     // Drive tuning for this autonomous (uses SimplifiedOdometryRobot limits internally)
@@ -50,11 +64,13 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
     // High-level autonomous states (kept similar to StarterBotAuto, but drive steps use odometry)
     private enum AutoState {
         SELECT_ALLIANCE,
+        INITIAL_DRIVE,
         LAUNCH_SEQUENCE,
         WAIT_FOR_LAUNCH_CYCLE,
         DRIVE_AWAY_FROM_GOAL,
         TURN_TO_FIELD,
         DRIVE_OFF_LINE,
+        TURN_LOADING_ZONE,
         COMPLETE
     }
     private AutoState autoState = AutoState.SELECT_ALLIANCE;
@@ -123,7 +139,7 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
         //reset heading for precise motion
         robot.resetHeading();
 
-        autoState   = AutoState.LAUNCH_SEQUENCE;
+        autoState   = AutoState.INITIAL_DRIVE;
         launchState = LaunchState.IDLE;
         shotTimer.reset();
 
@@ -131,6 +147,11 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
         while (opModeIsActive()) {
 
             switch (autoState) {
+                case INITIAL_DRIVE:
+                    //Drive away before launching
+                    robot.drive(-48.0, 0.6, DRIVE_HOLD_SEC);
+                    autoState = AutoState.LAUNCH_SEQUENCE;
+                    break;
 
                 case LAUNCH_SEQUENCE:
                     // Kick off first shot sequence
@@ -156,21 +177,27 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
 
                 case DRIVE_AWAY_FROM_GOAL:
                     // Back away a little to clear the goal (negative inches = back)
-                    robot.drive(-20.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    robot.drive(0.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
                     autoState = AutoState.TURN_TO_FIELD;
                     break;
 
                 case TURN_TO_FIELD:
                     // Face ±45° depending on alliance (RED = +45 CCW, BLUE = -45 CW)
                     //double targetHeading = (alliance == Alliance.RED) ? 87.0 : -87.0;
-                    double targetHeading = (alliance == Alliance.RED) ? 45.0 : -45.0;
+                    double targetHeading = (alliance == Alliance.RED) ? 43.0 : -43.0;
                     robot.turnTo(targetHeading, /*maxPower*/0.6, TURN_HOLD_SEC);
                     autoState = AutoState.DRIVE_OFF_LINE;
                     break;
 
                 case DRIVE_OFF_LINE:
                     // Drive further off the line to park/clear: adjust to your field plan
-                    robot.drive(-80.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    robot.drive(-95.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    autoState = AutoState.TURN_LOADING_ZONE;
+                    break;
+
+                case TURN_LOADING_ZONE:
+                    double targetHeading2 = (alliance == Alliance.RED) ? 135.0 : -135.0;
+                    robot.turnTo(targetHeading2, /*maxPower*/0.6, TURN_HOLD_SEC);
                     autoState = AutoState.COMPLETE;
                     break;
 
