@@ -42,8 +42,8 @@ public class TestBotDecodeAutonomous extends LinearOpMode {
     private static final double FEED_TIME_SECONDS = 0.40;
     private static final double TIME_BETWEEN_SHOTS = 3.0;
 
-    private static final double LAUNCHER_TARGET_VELOCITY = 1400;  // ticks/s -- initoal values 1125
-    private static final double LAUNCHER_MIN_VELOCITY    = 1180;  // ticks/s
+    private static final double LAUNCHER_TARGET_VELOCITY = 1260;  // ticks/s -- initoal values 1125
+    private static final double LAUNCHER_MIN_VELOCITY    = 1150;  // ticks/s
     private static final PIDFCoefficients LAUNCHER_PIDF  = new PIDFCoefficients(300, 0, 0, 10);
 
     // Drive tuning for this autonomous (uses SimplifiedOdometryRobot limits internally)

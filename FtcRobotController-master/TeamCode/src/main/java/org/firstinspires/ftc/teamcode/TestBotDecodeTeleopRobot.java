@@ -73,6 +73,9 @@ public class TestBotDecodeTeleopRobot extends OpMode {
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
     final double FULL_SPEED = 0.7;// We recommend keeping it less than 1.0
 
+    // NEW CONSTANT FOR INTAKE MOTOR
+    final double INTAKE_POWER = 1.0; // Full power for the intake motor
+
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
      * to read the current speed of the motor and apply more or less power to keep it at a constant
@@ -89,6 +92,8 @@ public class TestBotDecodeTeleopRobot extends OpMode {
     private DcMotorEx launcher = null;
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
+    // NEW MOTOR DECLARATION
+    private DcMotor intake = null;
 
     private double feederStartTime;
 
@@ -115,7 +120,16 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         LAUNCHING,
     }
 
+    // NEW STATE MACHINE FOR INTAKE
+    private enum IntakeState {
+        STOPPED,
+        INTAKING, // Clockwise
+        OUTTAKING // Counter-clockwise
+    }
+
     private LaunchState launchState;
+    // NEW STATE VARIABLE
+    private IntakeState intakeState;
 
     // Setup a variable for each drive wheel to save power level for telemetry
     double leftFrontPower;
@@ -129,6 +143,8 @@ public class TestBotDecodeTeleopRobot extends OpMode {
     @Override
     public void init() {
         launchState = LaunchState.IDLE;
+        // INITIALIZE INTAKE STATE
+        intakeState = IntakeState.STOPPED;
 
         /*
          * Initialize the hardware variables. Note that the strings used here as parameters
@@ -142,6 +158,9 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
+        // INITIALIZE NEW INTAKE MOTOR
+        intake = hardwareMap.get(DcMotor.class, "intake");
+
 
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
@@ -154,6 +173,9 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        // SET INTAKE MOTOR DIRECTION
+        intake.setDirection(DcMotor.Direction.FORWARD); // Set based on your robot's desired 'clockwise' direction
+
 
         /*
          * Here we set our launcher to the RUN_USING_ENCODER runmode.
@@ -163,6 +185,8 @@ public class TestBotDecodeTeleopRobot extends OpMode {
          * through any wiring.
          */
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // SET INTAKE MOTOR RUNMODE
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Run without encoders for simple on/off control
 
         /*
          * Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to
@@ -174,6 +198,9 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         leftBackDrive.setZeroPowerBehavior(BRAKE);
         rightBackDrive.setZeroPowerBehavior(BRAKE);
         launcher.setZeroPowerBehavior(BRAKE);
+        // SET INTAKE ZERO POWER BEHAVIOR
+        intake.setZeroPowerBehavior(BRAKE);
+
 
         /*
          * set Feeders to an initial value to initialize the servo controller
@@ -244,12 +271,16 @@ public class TestBotDecodeTeleopRobot extends OpMode {
             launch(false);
         }
 
+        // --- NEW INTAKE CONTROL LOGIC ---
+        handleIntakeControl();
+        // --------------------------------
+
         /*
          * Show the state and motor powers
          */
         telemetry.addData("State", launchState);
+        telemetry.addData("Intake State", intakeState); // ADDED INTAKE TELEMETRY
         telemetry.addData("motorSpeed", launcher.getVelocity());
-
     }
 
     /*
@@ -277,34 +308,3 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         leftBackDrive.setPower(leftBackPower);
         rightBackDrive.setPower(rightBackPower);
 
-    }
-
-    private void launch(boolean shotRequested) {
-        switch (launchState) {
-            case IDLE:
-                if (shotRequested) {
-                    launchState = LaunchState.SPIN_UP;
-                }
-                break;
-            case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
-                    launchState = LaunchState.LAUNCH;
-                }
-                break;
-            case LAUNCH:
-                leftFeeder.setPower(FULL_SPEED);
-                rightFeeder.setPower(FULL_SPEED);
-                feederStartTime = getRuntime();
-                launchState = LaunchState.LAUNCHING;
-                break;
-            case LAUNCHING:
-                if ((getRuntime() - feederStartTime) > FEED_TIME_SECONDS) {
-                    launchState = LaunchState.IDLE;
-                    leftFeeder.setPower(STOP_SPEED);
-                    rightFeeder.setPower(STOP_SPEED);
-                }
-                break;
-        }
-    }
-}
