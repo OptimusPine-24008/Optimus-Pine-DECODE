@@ -28,14 +28,14 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
 
     // Shooter/Feeder tuning
     private static final double FEED_TIME_SECONDS = 1.00; //0.4
-    private static final double TIME_BETWEEN_SHOTS = 1.50; //3.0
+    private static final double TIME_BETWEEN_SHOTS = 1.75; //3.0
 
-    private static final double LAUNCHER_TARGET_VELOCITY = 1300;  // ticks/s
-    private static final double LAUNCHER_MIN_VELOCITY    = 1100;  // ticks/s
+    private static final double LAUNCHER_TARGET_VELOCITY = 1360;  // ticks/s //1350
+    private static final double LAUNCHER_MIN_VELOCITY    = 1135;  // ticks/s //1125
     private static final PIDFCoefficients LAUNCHER_PIDF  = new PIDFCoefficients(300, 0, 0, 10);
 
     // Intake tuning — simple open-loop
-    private static final double INTAKE_POWER = 1.0; // flip sign or motor direction if needed
+    private static final double INTAKE_POWER = 0.85; // flip sign or motor direction if needed
 
     // Drive tuning
     private static final double DRIVE_HOLD_SEC = 1.0;
@@ -55,12 +55,11 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
         INITIAL_DRIVE,
         LAUNCH_SEQUENCE,
         WAIT_FOR_LAUNCH_CYCLE,
-        DRIVE_AWAY_FROM_GOAL,
         TURN_TO_FIELD,
         DRIVE_OFF_LINE,
-        TURN_LOADING_ZONE,
-        GO_TO_GOAL,
+        BACK_TO_LAUNCHING_ZONE,
         WAIT_FOR_LAUNCH_CYCLE2,
+        ESCAPE_THE_ZONE,
         COMPLETE
     }
     private AutoState autoState = AutoState.SELECT_ALLIANCE;
@@ -143,7 +142,7 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                 case INITIAL_DRIVE:
                     // Begin intaking while we drive away
                     startIntake(); // <<< NEW
-                    robot.drive(-50.0, 0.6, DRIVE_HOLD_SEC);
+                    robot.drive(-80.0, 0.6, DRIVE_HOLD_SEC);//-50.0
                     autoState = AutoState.LAUNCH_SEQUENCE;
                     break;
 
@@ -160,46 +159,33 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                         if (shotsToFire > 0) {
                             // Start next shot
                             requestLaunch();
-                        } else {
+                        }
+                        else {
                             // Done firing
                             launcher.setVelocity(0);
                             stopFeeders();
-                            autoState = AutoState.DRIVE_AWAY_FROM_GOAL;
+                            autoState = AutoState.TURN_TO_FIELD;
                         }
                     }
                     break;
 
-                case DRIVE_AWAY_FROM_GOAL:
-                    // Resume intake for the rest of auto
-                    // <<< NEW
-                    robot.drive(0.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
-                    autoState = AutoState.TURN_TO_FIELD;
-                    break;
-
                 case TURN_TO_FIELD:
-                    double targetHeading = (alliance == Alliance.RED) ? 43.0 : -43.0;
+                    double targetHeading = (alliance == Alliance.RED) ? -45.0 : 45.0; //43
                     robot.turnTo(targetHeading, /*maxPower*/0.6, TURN_HOLD_SEC);
+                    startIntake();
                     autoState = AutoState.DRIVE_OFF_LINE;
                     break;
 
                 case DRIVE_OFF_LINE:
-                    robot.drive(-100.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);//original -95.0
+                    robot.drive(50.0, /*maxPower*/0.2, DRIVE_HOLD_SEC);//original -95.0
                     //
-                    autoState = AutoState.TURN_LOADING_ZONE;
+                    autoState = AutoState.BACK_TO_LAUNCHING_ZONE;
                     break;
 
-                case TURN_LOADING_ZONE:
-                    startIntake();
-                    double targetHeading2 = (alliance == Alliance.RED) ? -45.0 : 45.0;//135.0, -135.0
+                case BACK_TO_LAUNCHING_ZONE:
+                    robot.drive(-50.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    double targetHeading2 = (alliance == Alliance.RED) ? 0.0 : 0.0;//135.0, -135.0
                     robot.turnTo(targetHeading2, /*maxPower*/0.6, TURN_HOLD_SEC);
-                    robot.drive(40.0, 0.6, TURN_HOLD_SEC); //new thing
-                    autoState = AutoState.GO_TO_GOAL;
-                    break;
-
-                case GO_TO_GOAL:
-                    double targetHeading3 = (alliance == Alliance.RED) ? 45.0 : -45.0;
-                    robot.turnTo(targetHeading3, 0.6, TURN_HOLD_SEC);
-                    robot.drive(60.0, 0.6, TURN_HOLD_SEC);
                     requestLaunch();
                     autoState = AutoState.WAIT_FOR_LAUNCH_CYCLE2;
                     break;
@@ -210,15 +196,21 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                         if (shotsToFire > 0) {
                             // Start next shot
                             requestLaunch();
-                        } else {
+                        }
+                        else {
                             // Done firing
                             launcher.setVelocity(0);
                             stopFeeders();
-                            autoState = AutoState.COMPLETE;
+                            autoState = AutoState.ESCAPE_THE_ZONE;
                         }
                     }
                     break;
 
+                case ESCAPE_THE_ZONE:
+                    double targetHeading3 = (alliance == Alliance.RED) ? 45.0 : -45.0;
+                    robot.turnTo(targetHeading3, /*maxPower*/0.6, TURN_HOLD_SEC);
+                    robot.drive(-50.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
+                    autoState = AutoState.COMPLETE;
 
                 case COMPLETE:
                     robot.stopRobot();
