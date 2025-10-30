@@ -30,8 +30,8 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
     private static final double FEED_TIME_SECONDS = 1.00; //0.4
     private static final double TIME_BETWEEN_SHOTS = 1.75; //3.0
 
-    private static final double LAUNCHER_TARGET_VELOCITY = 1360;  // ticks/s //1350
-    private static final double LAUNCHER_MIN_VELOCITY    = 1135;  // ticks/s //1125
+    private static final double LAUNCHER_TARGET_VELOCITY = 1400;  // ticks/s //1350 now 1360
+    private static final double LAUNCHER_MIN_VELOCITY    = 1165;  // ticks/s //1125 now 1135
     private static final PIDFCoefficients LAUNCHER_PIDF  = new PIDFCoefficients(300, 0, 0, 10);
 
     // Intake tuning — simple open-loop
@@ -170,15 +170,17 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                     break;
 
                 case TURN_TO_FIELD:
-                    double targetHeading = (alliance == Alliance.RED) ? -45.0 : 45.0; //43
+                    double targetHeading = (alliance == Alliance.RED) ? -47.0 : 47.0; //45
                     robot.turnTo(targetHeading, /*maxPower*/0.6, TURN_HOLD_SEC);
-                    startIntake();
+                    startIntake();//this code will collect two artifacts
                     autoState = AutoState.DRIVE_OFF_LINE;
                     break;
 
                 case DRIVE_OFF_LINE:
-                    robot.drive(50.0, /*maxPower*/0.2, DRIVE_HOLD_SEC);//original -95.0
-                    //
+                    robot.drive(50.0, /*maxPower*/0.2, DRIVE_HOLD_SEC);//original -95.0*
+                    //the code below will stop intKE WHILE DRVING OFF LINE
+                    stopIntake();
+
                     autoState = AutoState.BACK_TO_LAUNCHING_ZONE;
                     break;
 
@@ -186,6 +188,15 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                     robot.drive(-50.0, /*maxPower*/0.6, DRIVE_HOLD_SEC);
                     double targetHeading2 = (alliance == Alliance.RED) ? 0.0 : 0.0;//135.0, -135.0
                     robot.turnTo(targetHeading2, /*maxPower*/0.6, TURN_HOLD_SEC);
+
+                    //Below the intake will activate to assist launch
+                    startIntake();
+
+                    // ---Change request shot to two shots---
+                    //This code will reset shotsToFire to 2
+                    shotsToFire = 2;
+
+                    //---Now it is ready to request shotToFire---
                     requestLaunch();
                     autoState = AutoState.WAIT_FOR_LAUNCH_CYCLE2;
                     break;
