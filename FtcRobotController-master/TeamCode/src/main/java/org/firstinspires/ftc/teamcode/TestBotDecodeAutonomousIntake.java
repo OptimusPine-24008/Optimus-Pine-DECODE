@@ -190,11 +190,11 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                     robot.turnTo(targetHeading2, /*maxPower*/0.6, TURN_HOLD_SEC);
 
                     //Below the intake will activate to assist launch
-                    startIntake();
+                    //startIntake();Move this line to after requestLaunch() to execute intake with launch
 
                     // ---Change request shot to two shots---
                     //This code will reset shotsToFire to 2
-                    shotsToFire = 2;
+                    shotsToFire = 3;
 
                     //---Now it is ready to request shotToFire---
                     requestLaunch();
@@ -207,11 +207,13 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                         if (shotsToFire > 0) {
                             // Start next shot
                             requestLaunch();
+                            startIntake();
                         }
                         else {
                             // Done firing
                             launcher.setVelocity(0);
                             stopFeeders();
+                            stopIntake();
                             autoState = AutoState.ESCAPE_THE_ZONE;
                         }
                     }
@@ -226,7 +228,7 @@ public class TestBotDecodeAutonomousIntake extends LinearOpMode {
                 case COMPLETE:
                     robot.stopRobot();
                     stopFeeders();
-                    stopIntake(); // <<< NEW
+                    //stopIntake(); // <<< NEW ---Maybe we don't need this line
                     telemetry.addLine("AUTO COMPLETE");
                     telemetry.addData("Heading (deg)", "%.1f", robot.getHeading());
                     telemetry.update();
