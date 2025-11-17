@@ -33,22 +33,15 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
@@ -82,8 +75,8 @@ public class TestBotDecodeTeleopRobot extends OpMode {
      * velocity. Here we are setting the target, and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1400;//Increase velocity by 100 each trial. Initial velocity 1125.
-    final double LAUNCHER_MIN_VELOCITY = 1150;//Increase velocity by 100 each trial. Initial velocity 1075.
+    final double LAUNCHER_TARGET_VELOCITY = 1400;//Increase velocity by 100 each trial. Initial velocity 1125/1315
+    final double LAUNCHER_MIN_VELOCITY = 1150;//Increase velocity by 100 each trial. Initial velocity 1075/1100
     //Declare OpMode members.
     private DcMotor leftFrontDrive = null;
     private DcMotor rightFrontDrive = null;
@@ -270,6 +263,15 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         } else {
             launch(false);
         }
+        //++++++run feeders the opposite way to loead three artifacts
+        /*if (gamepad2.b){
+            leftFeeder.setPower(-FULL_SPEED);
+            rightFeeder.setPower(-FULL_SPEED);
+            feederStartTime = getRuntime();
+
+            }else if (gamepad2.y) {*/
+
+
 
         // --- NEW INTAKE CONTROL LOGIC ---
         handleIntakeControl();
@@ -308,3 +310,66 @@ public class TestBotDecodeTeleopRobot extends OpMode {
         leftBackDrive.setPower(leftBackPower);
         rightBackDrive.setPower(rightBackPower);
 
+    }
+
+    private void launch(boolean shotRequested) {
+        switch (launchState) {
+            case IDLE:
+                if (shotRequested) {
+                    launchState = LaunchState.SPIN_UP;
+                }
+                break;
+            case SPIN_UP:
+                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                    launchState = LaunchState.LAUNCH;
+                }
+                break;
+            case LAUNCH:
+                leftFeeder.setPower(FULL_SPEED);
+                rightFeeder.setPower(FULL_SPEED);
+                feederStartTime = getRuntime();
+                launchState = LaunchState.LAUNCHING;
+                break;
+            case LAUNCHING:
+                if ((getRuntime() - feederStartTime) > FEED_TIME_SECONDS) {
+                    launchState = LaunchState.IDLE;
+                    leftFeeder.setPower(STOP_SPEED);
+                    rightFeeder.setPower(STOP_SPEED);
+                }
+                break;
+        }
+    }
+
+    // --- NEW METHOD TO HANDLE INTAKE CONTROL ---
+    private void handleIntakeControl() {
+        // If the right bumper (Intake/Clockwise) is pressed, set state to INTAKING
+        if (gamepad2.right_bumper) {
+            intakeState = IntakeState.INTAKING;
+            // If the left bumper (Outtake/Counter-clockwise) is pressed, set state to OUTTAKING
+        } else if (gamepad2.left_bumper) {
+            intakeState = IntakeState.OUTTAKING;
+            // If neither is pressed, stop the intake
+        } else {
+            intakeState = IntakeState.STOPPED;
+        }
+
+        // Apply power based on the current state
+        switch (intakeState) {
+            case INTAKING:
+                // Positive power for clockwise rotation (assuming DcMotor.Direction.FORWARD is clockwise)
+                intake.setPower(INTAKE_POWER);
+                break;
+            case OUTTAKING:
+                // Negative power for counter-clockwise rotation (reverse)
+                intake.setPower(-INTAKE_POWER);
+                break;
+            case STOPPED:
+            default:
+                // Set power to zero to stop
+                intake.setPower(STOP_SPEED);
+                break;
+        }
+    }
+    // ------------------------------------------
+}
