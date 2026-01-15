@@ -189,6 +189,7 @@ public class GameBotAutonomous extends LinearOpMode {
                 case TAG21_TURN:
                     double tag21Goal = (alliance == Alliance.RED) ? 45.0 : -45.0;
                     robot.turnTo(tag21Goal, 0.6, TURN_HOLD_SEC);
+                    sleep(200);
                     autoState = AutoState.TAG21_PULSE_BOTH;
                     break;
 
@@ -196,12 +197,11 @@ public class GameBotAutonomous extends LinearOpMode {
                     pulseServo(leftFeeder, FEED_POS, 500);
                     sorter.setPower(1.0);
                     double helpme = (alliance == Alliance.RED) ? 42.0 : -42.0;
-                    robot.turnTo(helpme, 0.6, TURN_HOLD_SEC);
+                    robot.turnTo(helpme, 0.6, 0.65);
                     pulseServo(rightFeeder, FEED_POS, 500);
-                    sleep(200);
+                    sleep(100);
                     double aaaah = (alliance == Alliance.RED) ? 45.0 : -45.0;
-                    robot.turnTo(aaaah, 0.6, TURN_HOLD_SEC);
-                    sleep(200);
+                    robot.turnTo(aaaah, 0.6, 0.65);
                     pulseServo(leftFeeder, FEED_POS, 500);
                     autoState = AutoState.TAG21_LAUNCH_SEQUENCE;
                     break;
@@ -211,30 +211,30 @@ public class GameBotAutonomous extends LinearOpMode {
                     launcher.setVelocity(0);
                     double intake21 = (alliance == Alliance.RED) ? 0.0 : 0.0;
                     robot.turnTo(intake21, 0.6, TURN_HOLD_SEC);
-                    robot.drive(-25.1, 0.6, 2.5);
-                    sleep(300);
+                    robot.drive(-25.0, 0.6, 2.5);
+                    sleep(200);
                     double iwannagotosleep = (alliance == Alliance.RED) ? 90.0 : -90.0;
                     robot.turnTo(iwannagotosleep, 0.6, 1.1);
                     autoState = AutoState.TAG21_TURN_TO_FIELD;
                     break;
 
                 case TAG21_TURN_TO_FIELD:
-                    sorter.setPower(1.0);
-                    robot.drive(11.0, 0.5, 1.25);
-                    sleep(200);
+                    robot.drive(11.02, 0.5, 2.0);
+                    spinSorter(1.0, 1750);
+                    sleep(150);
                     autoState = AutoState.TAG21_TURN_TO_FIELD2;
                     break;
 
                 case TAG21_TURN_TO_FIELD2:
                     sorter.setPower(-1.0);
-                    robot.drive(15.0, 0.3, 3.2);
-                    sleep(200);
+                    robot.drive(14.98, 0.10, 3.7);
+                    sleep(100);
                     autoState = AutoState.TAG21_DRIVE_OFF_LINE;
                     break;
 
                 case TAG21_DRIVE_OFF_LINE:
                     launcher.setVelocity(1450);
-                    robot.drive(-19.0, 0.5, 2.5);
+                    robot.drive(-18.5, 0.5, 2.2);
                     sorter.setPower(0.0);
                     autoState = AutoState.TAG21_BACK_TO_LAUNCHING_ZONE;
                     break;
@@ -242,7 +242,7 @@ public class GameBotAutonomous extends LinearOpMode {
                 case TAG21_BACK_TO_LAUNCHING_ZONE:
                     double tspmo = (alliance == Alliance.RED) ? 0.0 : 0.0;
                     robot.turnTo(tspmo, 0.6, 1.1);
-                    robot.drive(25.1, 0.5, 2.0);
+                    robot.drive(25.0, 0.5, 2.0);
                     double plswork = (alliance == Alliance.RED) ? 42.0 : -42.0;
                     robot.turnTo(plswork, 0.6, TURN_HOLD_SEC);
                     autoState = AutoState.TAG21_WAIT_FOR_LAUNCH_CYCLE2;
@@ -250,14 +250,14 @@ public class GameBotAutonomous extends LinearOpMode {
 
                 case TAG21_WAIT_FOR_LAUNCH_CYCLE2:
                     pulseServo(rightFeeder, FEED_POS, 500);
-                    sleep(300);
+                    sleep(100);
                     sorter.setPower(-1.0);
                     double square = (alliance == Alliance.RED) ? 45.0 : -45.0;
-                    robot.turnTo(square, 0.6, TURN_HOLD_SEC);
+                    robot.turnTo(square, 0.6, 0.65);
                     pulseServo(leftFeeder, FEED_POS, 500);
-                    sleep(300);
+                    sleep(150);
                     double finalegoal21 = (alliance == Alliance.RED) ? 42.0 : -42.0;
-                    robot.turnTo(finalegoal21, 0.6, TURN_HOLD_SEC);
+                    robot.turnTo(finalegoal21, 0.6, 0.65);
                     pulseServo(rightFeeder, FEED_POS, 500);
                     sleep(100);
                     autoState = AutoState.ESCAPE_THE_ZONE;
