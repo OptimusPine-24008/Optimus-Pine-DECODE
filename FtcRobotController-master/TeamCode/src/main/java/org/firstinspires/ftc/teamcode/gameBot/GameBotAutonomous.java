@@ -95,6 +95,7 @@ public class GameBotAutonomous extends LinearOpMode {
     // Hardware
     private DcMotorEx launcher;
     private Servo leftFeeder, rightFeeder;
+
     private DcMotor intake;
     private CRServo sorter;
     private HuskyLens huskyLens;
