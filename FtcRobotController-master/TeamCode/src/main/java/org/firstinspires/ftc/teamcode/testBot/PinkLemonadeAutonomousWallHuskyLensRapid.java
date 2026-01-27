@@ -42,6 +42,10 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
     private static final int ID_23_PPG = 3;
     private int detectedTag = -1;
 
+    private final ElapsedTime tagScanTimer = new ElapsedTime();
+    private static final double TAG_SCAN_TIME = 0.4; // seconds
+
+
     // Shots to fire at start
     //private int shotsToFire = 2;
 
@@ -93,6 +97,7 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
         TAG23_NOM_NOM_2,
         TAG21_NOM_NOM_3,
         TAG21_WAIT_FOR_LAUNCH_CYCLE3,
+        BYEBYE,
         COMPLETE
     }
     private AutoState autoState = AutoState.SELECT_ALLIANCE;
@@ -161,10 +166,22 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
             //telemetry.addData("Tag Recognized", );
             telemetry.addData("Press triangle", "zero heading");
             telemetry.addData("Heading (deg)", "%.1f", robot.getHeading());
+            telemetry.addData("INIT Tag", detectedTag);
             telemetry.addLine("Aim robot at field starting position, press triangle to zero");
             telemetry.update();
             sleep(20);
         }
+        //++++++++++++++pre-scan AprilTag HuskyLens during INIT++++++++++++++++++++++
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        for (HuskyLens.Block b : blocks) {
+            if (b.id == ID_21_GPP || b.id == ID_22_PGP || b.id == ID_23_PPG) {
+                detectedTag = b.id;
+
+            }
+
+        }
+
+
 
         if (isStopRequested()) return;
 
@@ -181,28 +198,47 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
         while (opModeIsActive()) {
             switch (autoState) {
 
+
                 case INITIAL_DRIVE:
                     startIntake();
                     robot.strafe(-110.0, 0.95, 0.25);//initial valu0.25
+                    robot.resetOdometry();
+                    robot.turnTo((alliance == Alliance.RED) ? -45.5 : 44.0, 0.95, 0.25);//initial value 0.25
+                    tagScanTimer.reset();
                     autoState = AutoState.SCAN_FOR_TAG;
+                    autoState = AutoState.TAG21_LAUNCH_SEQUENCE;
                     break;
 
+                //case SCAN_FOR_TAG:
+                //detectedTag = -1;
+                //readHuskyLensTag();
+                //telemetry.addData("Tag After Drive", detectedTag);
+                //telemetry.update();
+                //autoState = AutoState.TAG_DECISION;
+                //break;
                 case SCAN_FOR_TAG:
-                    detectedTag = -1;
-                    readHuskyLensTag();
-                    telemetry.addData("Tag After Drive", detectedTag);
-                    telemetry.update();
-                    autoState = AutoState.TAG_DECISION;
+                    if (tagScanTimer.seconds() == 0) {
+                        detectedTag = -1;          // clear old value
+                        tagScanTimer.reset();
+
+                    }
+
+                    readHuskyLensTag();            // keep sampling
+                    if (detectedTag != -1 || tagScanTimer.seconds() > TAG_SCAN_TIME) {
+                        autoState = AutoState.TAG_DECISION;
+
+                    }
                     break;
+
 
                 case TAG_DECISION:
                     runTagDecisionBranch();
                     break;
 
-                case TAG21_SPINNY_SPIN:
+                /* case TAG21_SPINNY_SPIN:
                     robot.turnTo((alliance == Alliance.RED) ? -44.5 : 44.0, 0.95, 0.15);//initial value 0.25
                     autoState = AutoState.TAG21_LAUNCH_SEQUENCE;
-                    break;
+                    break; */
                 case TAG22_SPINNY_SPIN:
                     robot.turnTo((alliance == Alliance.RED) ? -43.0 : 43.0, 0.95, 0.15);//initial value 0.25
                     autoState = AutoState.TAG22_LAUNCH_SEQUENCE;
@@ -255,7 +291,7 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
                     break;
 
                 case TAG21_TURN_TO_FIELD:
-                    robot.turnTo((alliance == Alliance.RED) ? 0.0 : 0.0, 0.95, 0.15);
+                    robot.turnTo((alliance == Alliance.RED) ? 0.0 : 0.0, 0.95, 0.25);
                     startIntake();
                     autoState = AutoState.TAG21_NOM_NOM_1;
                     break;
@@ -280,9 +316,9 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
                     break;
 
                 case TAG21_NOM_NOM_1:
-                    leftFeeder.setPower(-1.0);
-                    rightFeeder.setPower(-1.0);
-                    robot.drive(59, 0.5, 0.25, 2.5);
+                    //leftFeeder.setPower(-1.0);
+                    //rightFeeder.setPower(-1.0);
+                    robot.drive(58, 0.50, 0.25, 2.0);
                     stopFeeders();
                     //stopIntake();
                     autoState = AutoState.TAG21_BACK_TO_LAUNCHING_ZONE;
@@ -306,8 +342,8 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
 
                 case TAG21_BACK_TO_LAUNCHING_ZONE:
                     launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                    robot.drive(-57.0, 0.95, 0.25, 1.5);
-                    robot.turnTo((alliance == Alliance.RED) ? -45.0 : 45.0, 0.95, 0.15); // changed
+                    robot.drive(-57.0, 0.95, 0.25, 2.5);
+                    robot.turnTo((alliance == Alliance.RED) ? -45.5 : 45.0, 0.95, 0.15); // changed
                     //shotsToFire = 4;
                     requestLaunch();
                     autoState = AutoState.TAG21_WAIT_FOR_LAUNCH_CYCLE2;
@@ -362,7 +398,7 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
                     break;
 
                 case TAG21_ESCAPE_THE_ZONE:
-                    robot.turnTo(0.0, 0.95, 0.25);
+                    robot.turnTo(0.0, 0.95, 0.15);
                     robot.strafe(35.0, 0.95, 0.15);
                     autoState = AutoState.TAG21_NOM_NOM_2;
                     break;
@@ -378,10 +414,10 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
                     break;
 
                 case TAG21_NOM_NOM_2:
-                    leftFeeder.setPower(-1.0);
-                    rightFeeder.setPower(-1.0);
-                    robot.drive(63, 0.55, 0.25, 1.5);
-                    stopFeeders();
+                    //leftFeeder.setPower(-1.0);
+                    //rightFeeder.setPower(-1.0);
+                    robot.drive(75.0, 0.65, 0.25, 2.5);
+                    //stopFeeders();
                     autoState = AutoState.TAG21_NOM_NOM_3;
                     break;
                 case TAG22_NOM_NOM_2:
@@ -394,16 +430,16 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
                 case TAG23_NOM_NOM_2:
                     leftFeeder.setPower(-1.0);
                     rightFeeder.setPower(-1.0);
-                    robot.drive(59, 0.5, 0.25, 1.5);
+                    robot.drive(65, 0.5, 0.25, 1.5);
                     stopFeeders();
                     autoState = AutoState.COMPLETE;
                     break;
 
                 case TAG21_NOM_NOM_3://return back to starfe to launch
                     launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                    robot.drive(-60.0, 0.95, 0.25, 1.5);
-                    robot.strafe(-65.0, 0.95, 0.15);
-                    robot.turnTo((alliance == Alliance.RED) ? -45.0 : 45.0, 0.95, 0.15); // changed
+                    robot.drive(-50.0, 0.95, 0.25, 2.5);
+                    robot.strafe(-50.0, 0.95, 0.25);
+                    robot.turnTo((alliance == Alliance.RED) ? -46.0 : 45.0, 0.95, 0.15); // changed
                     //shotsToFire = 4;
                     requestLaunch();
                     autoState = AutoState.TAG21_WAIT_FOR_LAUNCH_CYCLE3;
@@ -417,10 +453,13 @@ public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
                         // stopIntake();
 
                         gate.setPosition(GATE_CLOSE_POS);
-                        autoState = AutoState.TAG21_ESCAPE_THE_ZONE;
+                        autoState = AutoState.BYEBYE;
                     }
                     break;
 
+                case BYEBYE:
+                    robot.strafe(15.0, 0.95, 0.25);
+                    autoState = AutoState.COMPLETE;
 
                 case COMPLETE:
                     robot.stopRobot();
