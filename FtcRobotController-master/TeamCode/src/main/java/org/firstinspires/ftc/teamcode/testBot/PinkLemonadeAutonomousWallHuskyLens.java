@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /**
  * Fixed version with Rapid Fire
  */
-@Autonomous(name = "ThisIsOurCodeYay", group = "StarterBot")
+@Autonomous(name = "ThisIsOurCodeYay Blue", group = "StarterBot")
 public class PinkLemonadeAutonomousWallHuskyLensRapid extends LinearOpMode {
 
     // Shooter/Feeder tuning
