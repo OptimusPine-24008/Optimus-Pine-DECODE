@@ -32,6 +32,10 @@ public class GameBotAutonomous extends LinearOpMode {
     // Intake
     private static final double INTAKE_POWER = -1.00;
 
+    //Sorter left or right
+    private static final double Sorter_POWER_LEFT = 1.00; // make it negative if necessary
+    private static final double Sorter_POWER_RIGHT = -1.00; // make it positive if necessary
+
     // Drive timing
     private static final double DRIVE_HOLD_SEC = 0.75;
     private static final double TURN_HOLD_SEC  = 0.70;
@@ -97,7 +101,7 @@ public class GameBotAutonomous extends LinearOpMode {
     private Servo leftFeeder, rightFeeder;
 
     private DcMotor intake;
-    private CRServo sorter;
+    private DcMotor sorter;
     private HuskyLens huskyLens;
 
     private final ElapsedTime feederTimer = new ElapsedTime();
@@ -115,7 +119,7 @@ public class GameBotAutonomous extends LinearOpMode {
         launcher    = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder  = hardwareMap.get(Servo.class, "left_feeder");
         rightFeeder = hardwareMap.get(Servo.class,"right_feeder");
-        sorter      = hardwareMap.get(CRServo.class, "sorter");
+        sorter      = hardwareMap.get(DcMotor.class, "sorter");
         intake      = hardwareMap.get(DcMotor.class, "intake");
 
         // HuskyLens
@@ -139,6 +143,13 @@ public class GameBotAutonomous extends LinearOpMode {
         intake.setZeroPowerBehavior(BRAKE);
         intake.setDirection(DcMotor.Direction.FORWARD);
         stopIntake();
+
+        //Sorter Motor
+        sorter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        sorter.setZeroPowerBehavior(BRAKE);
+        sorter.setDirection(DcMotor.Direction.FORWARD);
+        stopSorter();
+
 
         telemetry.addLine("INIT: X=Blue, B=Red, Triangle=Zero Heading");
         telemetry.update();
@@ -527,10 +538,12 @@ public class GameBotAutonomous extends LinearOpMode {
         intake.setPower(0.0);
     }
 
-    private void spinSorter(double power, long durationMs) {
+    private void stopSorter() {sorter.setPower(0.0); }
+
+    /*private void spinSorter(double power, long durationMs) {
         sorter.setPower(power);
         sleep(durationMs);
-        sorter.setPower(0.0);
+        sorter.setPower(0.0);*/
     }
 
 }
