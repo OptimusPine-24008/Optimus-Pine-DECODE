@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "Game TeleOp Robot Centric", group = "StarterBot")
+@TeleOp(name = "Game TeleOp Robot RobotCentric", group = "StarterBot")
 public class GameBotDecodeTeleOp extends OpMode {
 
     final double STOP_SPEED = 0.0;
@@ -53,7 +53,7 @@ public class GameBotDecodeTeleOp extends OpMode {
         leftBackDrive   = hardwareMap.get(DcMotor.class, "rear_left");
         rightBackDrive  = hardwareMap.get(DcMotor.class, "rear_right");
         intake = hardwareMap.get(DcMotor.class, "intake");
-        sideServo = hardwareMap.get(CRServo.class, "sorter");
+        sorder = hardwareMap.get(DcMotor.class, "sorter");
         shooter = hardwareMap.get(DcMotorEx.class, "shooter");
         leftFeeder  = hardwareMap.get(Servo.class, "left_feeder");
         rightFeeder = hardwareMap.get(Servo.class, "right_feeder");
