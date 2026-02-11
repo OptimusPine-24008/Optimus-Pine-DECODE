@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+import com.qualcomm.robotcore.hardware.CRServo;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -8,12 +9,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "Game TeleOp Robot RobotCentric", group = "StarterBot")
+@TeleOp(name = "Game TeleOp Robot Centric", group = "StarterBot")
 public class GameBotDecodeTeleOp extends OpMode {
 
     final double STOP_SPEED = 0.0;
@@ -32,7 +32,7 @@ public class GameBotDecodeTeleOp extends OpMode {
     private DcMotor leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive;
     private DcMotor intake;
     private DcMotorEx shooter;
-    private CRServo sideServo;
+    private DcMotor sideServo;
     private Servo leftFeeder, rightFeeder;
 
     private boolean shooterOn = false;
@@ -48,13 +48,13 @@ public class GameBotDecodeTeleOp extends OpMode {
 
     @Override
     public void init() {
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "front_left");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "front_right");
-        leftBackDrive   = hardwareMap.get(DcMotor.class, "rear_left");
-        rightBackDrive  = hardwareMap.get(DcMotor.class, "rear_right");
+        leftFrontDrive  = hardwareMap.get(DcMotor.class, "left_front");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front");
+        leftBackDrive   = hardwareMap.get(DcMotor.class, "left_back");
+        rightBackDrive  = hardwareMap.get(DcMotor.class, "right_back");
         intake = hardwareMap.get(DcMotor.class, "intake");
-        sorder = hardwareMap.get(DcMotor.class, "sorter");
-        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+        sideServo = hardwareMap.get(DcMotor.class, "perp");
+        shooter = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder  = hardwareMap.get(Servo.class, "left_feeder");
         rightFeeder = hardwareMap.get(Servo.class, "right_feeder");
 
@@ -64,7 +64,7 @@ public class GameBotDecodeTeleOp extends OpMode {
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
         intake.setDirection(DcMotor.Direction.FORWARD);
-        sideServo.setDirection(CRServo.Direction.FORWARD);
+        sideServo.setDirection(DcMotor.Direction.FORWARD);
         shooter.setDirection(DcMotorSimple.Direction.FORWARD);
 
         leftFeeder.setDirection(Servo.Direction.FORWARD);
@@ -139,7 +139,7 @@ public class GameBotDecodeTeleOp extends OpMode {
         double lt = gamepad2.left_trigger;
         double power = rt - lt;
         if (Math.abs(power) < SERVO_DEADBAND) power = 0.0;
-        sideServoPower = Range.clip(power, -1.0, 1.0);
+        sideServoPower = Range.clip(power, -0.5, 0.5);
         sideServo.setPower(sideServoPower);
     }
 
