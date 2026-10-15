@@ -55,7 +55,7 @@ public class GameBotAutonomous extends LinearOpMode {
     private enum LaunchState { IDLE, PREPARE, LAUNCHING }
     private LaunchState launchState = LaunchState.IDLE;
 
-    private enum AutoState {
+    private enum AutoState {a
         SELECT_ALLIANCE,
         INITIAL_DRIVE,
         SCAN_FOR_TAG,

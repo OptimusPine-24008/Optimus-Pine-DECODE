@@ -17,7 +17,7 @@ public class TwoControllerTeleOp extends OpMode {
     final double INTAKE_POWER = 1.0;
     final double SERVO_DEADBAND = 0.05;
 
-    private static final double SHOOTER_VEL_FAST = 1700.0;
+    private static final double SHOOTER_VEL_FAST = 1780.0;
     private static final double SHOOTER_VEL_SLOW = 1350.0;
     private static final double SHOOTER_VEL_REVERSE = -850.0;
 
